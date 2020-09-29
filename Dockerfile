@@ -1,6 +1,8 @@
-ARG BASEIMAGE=alpine:3.12.0
+ARG BASEIMAGE=grafana/grafana:latest
 FROM $BASEIMAGE as base
-LABEL maintainer="Denys Zhdanov <denis.zhdanov@gmail.com>"
+LABEL maintainer="Philipp van Kempen <philipp.van-kempen@tum.de>"
+
+USER root
 
 RUN true \
  && apk add --update --no-cache \
@@ -35,9 +37,9 @@ RUN true \
       /var/log/graphite
 
 FROM base as build
-LABEL maintainer="Denys Zhdanov <denis.zhdanov@gmail.com>"
+LABEL maintainer="Philipp van Kempen <philipp.van-kempen@tum.de>"
 
-ARG python_binary
+USER root
 
 RUN true \
  && apk add --update \
@@ -56,9 +58,10 @@ RUN true \
       mysql-dev \
       postgresql-dev \
  && curl https://bootstrap.pypa.io/get-pip.py -o /tmp/get-pip.py \
- && $python_binary /tmp/get-pip.py && rm /tmp/get-pip.py \
+ && chmod +x /tmp/get-pip.py \
+ && python3 /tmp/get-pip.py && rm /tmp/get-pip.py \
  && pip install virtualenv==16.7.10 \
- && virtualenv -p $python_binary /opt/graphite \
+ && virtualenv -p python3 /opt/graphite \
  && . /opt/graphite/bin/activate \
  && pip install \
       cairocffi==1.1.0 \
@@ -84,7 +87,7 @@ ARG whisper_repo=https://github.com/graphite-project/whisper.git
 RUN git clone -b ${whisper_version} --depth 1 ${whisper_repo} /usr/local/src/whisper \
  && cd /usr/local/src/whisper \
  && . /opt/graphite/bin/activate \
- && $python_binary ./setup.py install
+ && python3 ./setup.py install
 
 # install carbon
 ARG carbon_version=${version}
@@ -93,7 +96,7 @@ RUN . /opt/graphite/bin/activate \
  && git clone -b ${carbon_version} --depth 1 ${carbon_repo} /usr/local/src/carbon \
  && cd /usr/local/src/carbon \
  && pip3 install -r requirements.txt \
- && $python_binary ./setup.py install
+ && python3 ./setup.py install
 
 # install graphite
 ARG graphite_version=${version}
@@ -102,7 +105,7 @@ RUN . /opt/graphite/bin/activate \
  && git clone -b ${graphite_version} --depth 1 ${graphite_repo} /usr/local/src/graphite-web \
  && cd /usr/local/src/graphite-web \
  && pip3 install -r requirements.txt \
- && $python_binary ./setup.py install
+ && python3 ./setup.py install
 
 # install statsd
 ARG statsd_version=0.8.6
@@ -148,7 +151,7 @@ RUN mkdir -p /var/log/graphite/ \
 COPY conf/opt/statsd/config/ /opt/defaultconf/statsd/config/
 
 FROM base as production
-LABEL maintainer="Denys Zhdanov <denis.zhdanov@gmail.com>"
+LABEL maintainer="Philipp van Kempen <philipp.van-kempen@tum.de>"
 
 ENV STATSD_INTERFACE udp
 
@@ -159,8 +162,13 @@ COPY --from=build /opt /opt
 
 # defaults
 EXPOSE 80 2003-2004 2013-2014 2023-2024 8080 8125 8125/udp 8126
-VOLUME ["/opt/graphite/conf", "/opt/graphite/storage", "/opt/graphite/webapp/graphite/functions/custom", "/etc/nginx", "/opt/statsd/config", "/etc/logrotate.d", "/var/log", "/var/lib/redis"]
+VOLUME ["/opt/graphite/conf", "/opt/graphite/storage", "/opt/graphite/webapp/graphite/functions/custom", "/etc/nginx", "/opt/statsd/config", "/etc/logrotate.d", "/var/log", "/var/lib/redis", "/etc/grafana"]
 
 STOPSIGNAL SIGHUP
 
-ENTRYPOINT ["/entrypoint"]
+RUN mv /entrypoint /entrypoint.sh
+RUN mv /run.sh /entrypoint2.sh
+RUN mv /wrapper.sh /run.sh
+
+#ENTRYPOINT ["/entrypoint"]
+#ENTRYPOINT ["/wrapper.sh"]
