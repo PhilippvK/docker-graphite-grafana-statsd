@@ -1,6 +1,6 @@
-This is not an official docker image. Based on ??? I made the following modifications:
+This is not an official docker image. Based on https://github.com/graphite-project/docker-graphite-statsd I made the following modifications:
 
-- Build Dockerfile on top of official Grafana Container (???)
+- Build Dockerfile on top of official Grafana [Container](https://github.com/grafana/grafana/blob/master/Dockerfile)
 
 # Docker Image for Graphite & Statsd & Grafana
 
