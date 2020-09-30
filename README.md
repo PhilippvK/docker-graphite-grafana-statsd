@@ -1,39 +1,30 @@
-[![Docker Pulls](https://img.shields.io/docker/pulls/graphiteapp/graphite-statsd.svg?style=flat)](https://hub.docker.com/r/graphiteapp/graphite-statsd/) [![Docker Size](https://img.shields.io/docker/image-size/graphiteapp/graphite-statsd.svg?style=flat&?sort=date)](https://hub.docker.com/r/graphiteapp/graphite-statsd/)
+This is not an official docker image. Based on ??? I made the following modifications:
 
+- Build Dockerfile on top of official Grafana Container (???)
 
-This is official Graphite docker image repo.
+# Docker Image for Graphite & Statsd & Grafana
 
-This repo was based on [@hopsoft's](https://github.com/hopsoft/) [docker-graphite-statsd](https://github.com/hopsoft/docker-graphite-statsd) docker image and was used as base for "official" Graphite docker image with his permission. Also, it contains parts of famous [@obfuscurity's](https://github.com/obfuscurity/) [synthesize](https://github.com/obfuscurity/synthesize) Graphite installer. Thanks a lot, Nathan and Jason!
+## Get Graphite & Statsd (& Grafana) running instantly
 
-Any suggestions / patches etc. are welcome!
-
-#### Tags / architectures
- - Autobuild repo https://hub.docker.com/r/graphiteapp/docker-graphite-statsd (development repo, with automatic builds, unstable) is deprecated and was removed from Docker Hub. If you want to use unstable builds please use `master` tag in stable repo (https://hub.docker.com/r/graphiteapp/graphite-statsd).
- - Starting from `1.1.7-1` we building arm/arm64 versions too. 
- - Starting from `1.1.7-6` we building '-pypy' version of x64 image too, use it in case of performance issues (see PR #151 for details).
-
-# Docker Image for Graphite & Statsd
-
-## Get Graphite & Statsd running instantly
-
-Graphite & Statsd can be complex to setup.
+Graphite & Statsd (& Grafana) can be complex to setup.
 This image will have you running & collecting stats in just a few minutes.
 
 ## Quick Start
 
 ```sh
 docker run -d\
- --name graphite\
+ --name graphite_grafana\
  --restart=always\
  -p 80:80\
+ -p 3000:3000\
  -p 2003-2004:2003-2004\
  -p 2023-2024:2023-2024\
  -p 8125:8125/udp\
  -p 8126:8126\
- graphiteapp/graphite-statsd
+ philippvk/graphite-grafana-statsd
 ```
 
-This starts a Docker container named: **graphite**
+This starts a Docker container named: **graphite_grafana**
 
 Please also note that you can freely remap container port to any host port in case of corresponding port is already occupied on host. It's also not mandatory to map all ports, map only required ports - please see table below.
 
@@ -47,12 +38,15 @@ That's it, you're done ... almost.
 * [Graphite](http://graphite.readthedocs.org/en/latest/) - front-end dashboard
 * [Carbon](http://graphite.readthedocs.org/en/latest/carbon-daemons.html) - back-end
 * [Statsd](https://github.com/etsy/statsd/wiki) - UDP based back-end proxy
+* [Grafana]
+(???) - TODO
 
 ### Mapped Ports
 
 Host | Container | Service
 ---- | --------- | -------------------------------------------------------------------------------------------------------------------
-  80 |        80 | [nginx](https://www.nginx.com/resources/admin-guide/)
+  80 |        80 | [nginx](https://www.nginx.com/resources/admin-guide/) - Graphite
+3000 |      3000 | [nginx](https://www.nginx.com/resources/admin-guide/) - Grafana
 2003 |      2003 | [carbon receiver - plaintext](http://graphite.readthedocs.io/en/latest/feeding-carbon.html#the-plaintext-protocol)
 2004 |      2004 | [carbon receiver - pickle](http://graphite.readthedocs.io/en/latest/feeding-carbon.html#the-pickle-protocol)
 2023 |      2023 | [carbon aggregator - plaintext](http://graphite.readthedocs.io/en/latest/carbon-daemons.html#carbon-aggregator-py)
