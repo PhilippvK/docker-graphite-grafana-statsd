@@ -38,8 +38,7 @@ That's it, you're done ... almost.
 * [Graphite](http://graphite.readthedocs.org/en/latest/) - front-end dashboard
 * [Carbon](http://graphite.readthedocs.org/en/latest/carbon-daemons.html) - back-end
 * [Statsd](https://github.com/etsy/statsd/wiki) - UDP based back-end proxy
-* [Grafana]
-(???) - TODO
+* [Grafana](https://github.com/grafana/grafana) - Fancy Fortend for graphite
 
 ### Mapped Ports
 
@@ -71,10 +70,13 @@ DOCKER ASSIGNED   | /opt/statsd/config         | statsd config
 DOCKER ASSIGNED   | /etc/logrotate.d           | logrotate config
 DOCKER ASSIGNED   | /var/log                   | log files
 DOCKER ASSIGNED   | /var/lib/redis             | Redis TagDB data (optional)
+DOCKER ASSIGNED   | /etc/grafana               | grafana config
 
 ### Base Image
 
-Version before (and including) 1.1.4-9 were built using [Phusion's base image](https://github.com/phusion/baseimage-docker). Current version is based on [Alpine Linux](https://alpinelinux.org/) because of image size (please see [PR#66](https://github.com/graphite-project/docker-graphite-statsd/pull/66) for details).
+~Version before (and including) 1.1.4-9 were built using [Phusion's base image](https://github.com/phusion/baseimage-docker). Current version is based on [Alpine Linux](https://alpinelinux.org/) because of image size (please see [PR#66](https://github.com/graphite-project/docker-graphite-statsd/pull/66) for details).~
+
+New base image: `grafana/grafana:latest`
 
 * All Graphite related processes are run as daemons & monitored with [runit](http://smarden.org/runit/).
 * Includes additional services such as logrotate, nginx, optional Redis for TagDB and optional collectd instance.
@@ -195,10 +197,19 @@ At startup, entrypoint will run all scripts found in the directory /etc/run_once
 Read up on Graphite's [post-install tasks](https://graphite.readthedocs.org/en/latest/install.html#post-install-tasks).
 Focus on the [storage-schemas.conf](https://graphite.readthedocs.org/en/latest/config-carbon.html#storage-schemas-conf).
 
-1. Stop the container `docker stop graphite`.
-1. Find the configuration files on the host by inspecting the container `docker inspect graphite`.
-1. Update the desired config files.
-1. Restart the container `docker start graphite`.
+1. Stop the container `docker stop graphite_grafana`.
+2. Find the configuration files on the host by inspecting the container `docker inspect graphite_grafana`.
+  - Tipp: If you want to find out the path to f.e. `/etc/grafana`, run the following command:
+    ```
+    docker inspect graphite_grafana | grep -B1 '"Destination": "/etc/grafana",'
+    ```
+    which should give you something like the following:
+    ```
+    "Source": "/data/docker/volumes/8e2bb370826416d889dbaa0baa0270fe64b16171d8b591c3505e3009534dd657/_data",
+    "Destination": "/etc/grafana",
+    ```
+3. Update the desired config files.
+4. Restart the container `docker start graphite_grafana`.
 
 **Note**: If you change settings in `/opt/graphite/conf/storage-schemas.conf`
 be sure to delete the old whisper files under `/opt/graphite/storage/whisper/`.
